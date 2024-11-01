@@ -60,6 +60,16 @@ require("lazy").setup({
 		'VonHeikemen/lsp-zero.nvim',
 		branch = 'v4.x',
 		lazy = true,
+
+		dependencies = {
+			'williamboman/mason.nvim',
+			'williamboman/mason-lspconfig.nvim',
+			'neovim/nvim-lspconfig',
+			'hrsh7th/cmp-nvim-lsp',
+			'hrsh7th/nvim-cmp',
+			'L3MON4D3/LuaSnip',
+		},
+
 		config = function()
 
 			local lsp_zero = require('lsp-zero')
@@ -76,16 +86,8 @@ require("lazy").setup({
 				info = '🛈'
 			})
 
-		end,
 
-		dependencies = {
-			'williamboman/mason.nvim',
-			'williamboman/mason-lspconfig.nvim',
-			'neovim/nvim-lspconfig',
-			'hrsh7th/cmp-nvim-lsp',
-			'hrsh7th/nvim-cmp',
-			'L3MON4D3/LuaSnip',
-		},
+		end,
 
 		ft = {
 			'haskell',
@@ -182,6 +184,7 @@ require("lazy").setup({
 			'L3MON4D3/LuaSnip',
 			'saadparwaiz1/cmp_luasnip',
 			'rafamadriz/friendly-snippets',
+			'onsails/lspkind.nvim',
 		},
 
 		config = function()
@@ -197,6 +200,10 @@ require("lazy").setup({
 					{name = 'buffer'},
 					{name = 'luasnip'},
 				},
+				window = {
+					completion = cmp.config.window.bordered(),
+					documentation = cmp.config.window.bordered(),
+				},
 				mapping = cmp.mapping.preset.insert({
 					-- confirm completion
 					-- select = true : confirm without selecting the item
@@ -207,7 +214,7 @@ require("lazy").setup({
 					['<C-u>'] = cmp.mapping.scroll_docs(-4),
 					['<C-d>'] = cmp.mapping.scroll_docs(4),
 
-					-- jump forward/backword snippet
+					-- snippet
 					['<C-f>'] = cmp_action.luasnip_jump_forward(),
 					['<C-b>'] = cmp_action.luasnip_jump_backward(),
 				}),
@@ -217,8 +224,16 @@ require("lazy").setup({
 						require('luasnip').lsp_expand(args.body)
 					end,
 				},
-				  --- (Optional) Show source name in completion menu
-				formatting = cmp_format,
+				--- (Optional) Show source name in completion menu
+				-- formatting = cmp_format,
+				formatting = {
+					fields = {'abbr', 'kind', 'menu'},
+					format = require('lspkind').cmp_format({
+						mode = 'symbol', -- show only symbol annotations
+						maxwidth = 50, -- prevent the popup from showing more than provided characters
+						ellipsis_char = '...', -- when popup menu exceed maxwidth, the truncated part would show ellipsis_char instead
+					})
+				},
 			})
 		end
 	},
@@ -312,18 +327,97 @@ require("lazy").setup({
 -- Setting --
 -------------
 
-vim.opt.encoding = "UTF-8"
+vim.opt.fileencoding = "UTF-8"
+
 vim.opt.clipboard = "unnamedplus"
+
 vim.opt.number = true
 vim.opt.relativenumber = true
+
 vim.opt.title = true
+
+vim.opt.shortmess = 'a'
+
+vim.opt.lazyredraw = true
+
 vim.opt.scrolloff = 4
+
+vim.opt.cursorline = true
+
+vim.opt.wrap = true
+vim.opt.breakindent = true
+vim.opt.showbreak = '↳ '
+
+vim.opt.equalalways = false
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.infercase = true
+
+-- These settings are great with auto-save.nvim. It makes it so you can't loose
+-- code, it does increase the ammounts of write on your disk though so if
+-- you're using a hard drive you might want to reconsider autosave
+vim.opt.backup = false
+vim.opt.swapfile = false
+vim.opt.autowrite = true
+vim.opt.autowriteall = true
+vim.opt.undolevels = 5000
+vim.opt.undofile = true
+vim.opt.autoread = true
+
+-- Indentation
+vim.opt.expandtab = false
+vim.opt.smartindent = true
+
+vim.api.nvim_create_autocmd({'BufEnter', 'BufWinEnter'}, {
+	desc = 'Set indentation settings for haskell',
+	pattern = '*.hs',
+	callback = function()
+		vim.opt.expandtab = true
+		vim.opt.smartindent = true
+		vim.opt.tabstop = 2
+		vim.opt.shiftwidth = 2
+	end,
+})
+
+vim.api.nvim_create_autocmd({'BufEnter', 'BufWinEnter'}, {
+	desc = 'Set indentation settings for curly brace languages',
+	pattern = { '*.c', '*.cpp','*.h','*.hpp','*.lua','*.js','*.php', '*.sh', '.y', '.yy', '.l', '.ll'},
+	callback = function()
+		vim.opt.expandtab = false
+		vim.opt.cindent = true
+		vim.opt.tabstop = 4
+		vim.opt.shiftwidth = 4
+	end,
+})
+
+vim.api.nvim_create_autocmd({'BufEnter', 'BufWinEnter'}, {
+	desc = 'Set indentation settings for web stuff',
+	pattern = { '*.html', '*.css'},
+	callback = function()
+		vim.expandtab = false
+		vim.opt.tabstop = 2
+		vim.opt.shiftwidth = 2
+	end,
+})
 
 -- color scheme
 vim.opt.termguicolors = true
+vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
 -- vim.cmd.colorscheme("base16-tender") 	-- orange, red, yellow
 vim.cmd.colorscheme("base16-danqing") -- orange, red, mauve
 -- vim.cmd.colorscheme("base16-darcula")	-- orange, blue, green,
+
+
+vim.api.nvim_create_autocmd('BufWritePre', {
+	desc = 'Remove trailing spaces',
+	-- pattern = '^(.*.diff)', -- for `git add -p` when you edit to remove '-' lines TODO: fix
+	callback = function()
+		vim.cmd([[%s/\s\+$//e]])
+	end
+})
 
 vim.api.nvim_create_autocmd(
 	{ "TextYankPost" },
@@ -342,19 +436,48 @@ vim.api.nvim_create_autocmd(
 
 local opt = { noremap = true, silent = true }
 
+vim.keymap.set('n', 'Q', '<nop>')
+vim.keymap.set('n', '<esc>', '<cmd>noh<cr>', { noremap = true })
+vim.keymap.set('n', '<leader>x', '<cmd>!chmod +x %<cr>')
 
--- Splits / Navigation --
+
+-- Select All text in buffer
+vim.keymap.set('n', '<c-a>', 'ggVG')
+
+-- Save file
+vim.keymap.set('n', '<c-w>', ':w<cr>')
+
+-- Pass terminal mode to normal mode with escape
+vim.keymap.set( 't', '<esc>', '<c-\\><c-n>')
+
+
+-- Splits
 vim.keymap.set("n", "<Leader>v", "<C-w>v", opt)
 vim.keymap.set("n", "<Leader>s", "<C-w>s", opt)
+vim.keymap.set('n', '<Leader>t', ':vs |:terminal<cr>', opt) -- Conflicts with oil
+vim.keymap.set('n', '<Leader>c', ':close<cr>', opt)
+
+--Navigation
 vim.keymap.set("n", "<Leader>h", "<C-w>h", opt)
 vim.keymap.set("n", "<Leader>l", "<C-w>l", opt)
-vim.keymap.set("n", "<Leader>h", "<C-w>h", opt)
 vim.keymap.set("n", "<Leader>j", "<C-w>j", opt)
 vim.keymap.set("n", "<Leader>k", "<C-w>k", opt)
+
+-- resize
+vim.keymap.set('n', '<c-h>', '5<c-w>>', opt)
+vim.keymap.set('n', '<c-j>', '5<c-w>+', opt)
+vim.keymap.set('n', '<c-k>', '5<c-w>-', opt)
+vim.keymap.set('n', '<c-l>', '5<c-w><', opt)
+vim.keymap.set('n', '<c-e>', '5<c-w>=', opt)
+
 
 -- Jump line depend on size of terminal windows
 -- https://www.reddit.com/r/vim/comments/2k4cbr/problem_with_gj_and_gk/
 vim.keymap.set("n", "j", [[v:count ? "j" : "gj"]], { noremap = true, expr = true })
 vim.keymap.set("n", "k", [[v:count ? "k" : "gk"]], { noremap = true, expr = true })
 
-
+ -- Center cursor
+vim.keymap.set('n', '<C-d>', '<C-d>zz')
+vim.keymap.set('n', '<C-u>', '<C-u>zz')
+vim.keymap.set('n', 'J', 'mzJ`z')
+vim.keymap.set('i', '<esc>', '<esc>l')
