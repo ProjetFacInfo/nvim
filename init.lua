@@ -319,6 +319,16 @@ require("lazy").setup({
 		'itchyny/vim-haskell-indent',
 		ft = 'haskell',
 	},
+	{
+		'windwp/nvim-autopairs',
+		event = { 'InsertEnter', 'CmdlineEnter' },
+		config = function()
+			require('nvim-autopairs').setup({
+				enable_check_bracket_line = false,
+				ignored_next_char = "[%w%.]",
+			})
+		end,
+	},
 })
 
 
