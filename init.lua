@@ -177,42 +177,50 @@ require("lazy").setup({
 	{
 		'hrsh7th/nvim-cmp',
 		event = 'InsertEnter',
-		config = function()
-			local cmp = require('cmp')
+		dependencies = {
+			'hrsh7th/cmp-buffer',
+			'L3MON4D3/LuaSnip',
+			'saadparwaiz1/cmp_luasnip',
+			'rafamadriz/friendly-snippets',
+		},
 
-			cmp.setup({
-				sources = {
-					{name = 'nvim_lsp'},
-				},
-				mapping = cmp.mapping.preset.insert({
-					['<C-Space>'] = cmp.mapping.complete(),
-					['<C-u>'] = cmp.mapping.scroll_docs(-4),
-					['<C-d>'] = cmp.mapping.scroll_docs(4),
-				}),
-				snippet = {
-					expand = function(args)
-						vim.snippet.expand(args.body)
-					end,
-				},
-			})
-		end
-	},
-	{
-		'hrsh7th/cmp-buffer',
 		config = function()
 			local cmp = require('cmp')
+			local cmp_action = require('lsp-zero').cmp_action()
+			local cmp_format = require('lsp-zero').cmp_format({details = true})
+
+			require('luasnip.loaders.from_vscode').lazy_load()
 
 			cmp.setup({
 				sources = {
 					{name = 'nvim_lsp'},
 					{name = 'buffer'},
+					{name = 'luasnip'},
 				},
+				mapping = cmp.mapping.preset.insert({
+					-- confirm completion
+					['<C-y>'] = cmp.mapping.confirm({select = true}),
+
+					-- scroll up and down the documentation window
+					['<C-u>'] = cmp.mapping.scroll_docs(-4),
+					['<C-d>'] = cmp.mapping.scroll_docs(4),
+
+					-- jump forward/backword snippet
+					['<C-f>'] = cmp_action.luasnip_jump_forward(),
+					['<C-b>'] = cmp_action.luasnip_jump_backward(),
+				}),
+				snippet = {
+					expand = function(args)
+						-- vim.snippet.expand(args.body)
+						require('luasnip').lsp_expand(args.body)
+					end,
+				},
+				  --- (Optional) Show source name in completion menu
+				formatting = cmp_format,
 			})
 		end
-
 	},
-
-
+	-- Tresitter
 	{
 		'nvim-treesitter/nvim-treesitter',
 		lazy = false,
