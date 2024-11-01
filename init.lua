@@ -35,8 +35,9 @@ require("lazy").setup({
 			{ "<c-g>", mode = "n", function() require("fzf-lua").live_grep() end, desc = "Fzf grep" }
 		},
 	},
+ 	-- file explorer
 	{
-		"stevearc/oil.nvim", -- file explorer
+		"stevearc/oil.nvim",
 		lazy = false,
 		config = function()
 			require("oil").setup {
@@ -54,46 +55,60 @@ require("lazy").setup({
 		ft = { "netrw", "oil" },
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 	},
-
 	-- LSP
 	{
 		'VonHeikemen/lsp-zero.nvim',
 		branch = 'v4.x',
 		lazy = true,
-		config = false,
+		config = function()
+
+			local lsp_zero = require('lsp-zero')
+
+			lsp_zero.on_attach(function(client, bufnr)
+				lsp_zero.default_keymaps({buffer = bufnr, exclude = 'gl'})
+			end)
+
+
+			lsp_zero.set_sign_icons({
+				error = '✘',
+				warn = '▲',
+				hint = '⚑',
+				info = '🛈'
+			})
+
+		end,
+
+		dependencies = {
+			'williamboman/mason.nvim',
+			'williamboman/mason-lspconfig.nvim',
+			'neovim/nvim-lspconfig',
+			'hrsh7th/cmp-nvim-lsp',
+			'hrsh7th/nvim-cmp',
+			'L3MON4D3/LuaSnip',
+		},
+
+		ft = {
+			'haskell',
+			'asm',
+			'sh',
+			'ocaml',
+			'c', 'cpp',
+			'lua',
+			'html', 'css', 'js', 'php', 'sql',
+			'rust',
+			'java',
+			'python',
+		},
+
+		keys = {
+			{ '<leader>i', mode = 'n', function() vim.diagnostic.open_float() end, },
+		}
 	},
 	{
 		'williamboman/mason.nvim',
 		lazy = false,
 		opts = {},
 	},
-
-	-- Autocompletion
-	{
-		'hrsh7th/nvim-cmp',
-		event = 'InsertEnter',
-		config = function()
-			local cmp = require('cmp')
-
-			cmp.setup({
-				sources = {
-					{name = 'nvim_lsp'},
-				},
-				mapping = cmp.mapping.preset.insert({
-					['<C-Space>'] = cmp.mapping.complete(),
-					['<C-u>'] = cmp.mapping.scroll_docs(-4),
-					['<C-d>'] = cmp.mapping.scroll_docs(4),
-				}),
-				snippet = {
-					expand = function(args)
-						vim.snippet.expand(args.body)
-					end,
-				},
-			})
-		end
-	},
-
-	-- LSP
 	{
 		'neovim/nvim-lspconfig',
 		cmd = {'LspInfo', 'LspInstall', 'LspStart'},
@@ -146,7 +161,7 @@ require("lazy").setup({
 					'rust_analyzer',
 					'clangd', 'jdtls',
 					'emmet_ls', 'ts_ls', 'phpactor',
-					'pyright'
+					'pyright',
 				},
 				handlers = {
 					-- this first function is the "default handler"
@@ -157,6 +172,44 @@ require("lazy").setup({
 				}
 			})
 		end
+	},
+	-- Autocompletion
+	{
+		'hrsh7th/nvim-cmp',
+		event = 'InsertEnter',
+		config = function()
+			local cmp = require('cmp')
+
+			cmp.setup({
+				sources = {
+					{name = 'nvim_lsp'},
+				},
+				mapping = cmp.mapping.preset.insert({
+					['<C-Space>'] = cmp.mapping.complete(),
+					['<C-u>'] = cmp.mapping.scroll_docs(-4),
+					['<C-d>'] = cmp.mapping.scroll_docs(4),
+				}),
+				snippet = {
+					expand = function(args)
+						vim.snippet.expand(args.body)
+					end,
+				},
+			})
+		end
+	},
+	{
+		'hrsh7th/cmp-buffer',
+		config = function()
+			local cmp = require('cmp')
+
+			cmp.setup({
+				sources = {
+					{name = 'nvim_lsp'},
+					{name = 'buffer'},
+				},
+			})
+		end
+
 	},
 
 
@@ -263,7 +316,7 @@ vim.cmd.colorscheme("base16-danqing") -- orange, red, mauve
 -- vim.cmd.colorscheme("base16-darcula")	-- orange, blue, green,
 
 vim.api.nvim_create_autocmd(
-	{ "TextYankPost" }, 
+	{ "TextYankPost" },
 	{ pattern = { "*" },
 		callback = function()
 			vim.highlight.on_yank({
@@ -271,6 +324,7 @@ vim.api.nvim_create_autocmd(
 			}) end,
 	}
 )
+
 
 -----------------
 -- keybindings --
