@@ -225,7 +225,6 @@ require("lazy").setup({
 					end,
 				},
 				--- (Optional) Show source name in completion menu
-				-- formatting = cmp_format,
 				formatting = {
 					fields = {'abbr', 'kind', 'menu'},
 					format = require('lspkind').cmp_format({
@@ -329,6 +328,34 @@ require("lazy").setup({
 			})
 		end,
 	},
+	{
+		'windwp/nvim-ts-autotag',
+		config = true,
+		ft = { 'html', 'css', 'php', 'xml', 'js' },
+		dependencies = 'nvim-treesitter/nvim-treesitter',
+	},
+	{
+		'andymass/vim-matchup',
+		lazy = false,
+		dependencies = 'nvim-treesitter/nvim-treesitter',
+		config = function()
+			vim.g.matchup_surround_enabled = 1
+			vim.g.matchup_transmute_enabled = 1
+			vim.g.matchup_delim_stopline = 43
+			require('nvim-treesitter.configs').setup {
+				matchup = {
+					enable = true,
+					disable = {},
+				},
+			}
+		end
+	},
+	{
+		'kylechui/nvim-surround',
+		version = '*',
+		config = true,
+		keys = { 'cs', 'ds', 'ys', { 'S', mode = 'x' } },
+	},
 })
 
 
@@ -365,6 +392,8 @@ vim.opt.splitbelow = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.infercase = true
+
+vim.cmd('hi Normal guibg=NONE ctermbg=NONE')
 
 -- These settings are great with auto-save.nvim. It makes it so you can't loose
 -- code, it does increase the ammounts of write on your disk though so if
