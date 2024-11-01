@@ -199,7 +199,9 @@ require("lazy").setup({
 				},
 				mapping = cmp.mapping.preset.insert({
 					-- confirm completion
-					['<C-y>'] = cmp.mapping.confirm({select = true}),
+					-- select = true : confirm without selecting the item
+					-- ['<C-y>'] = cmp.mapping.confirm({select = true}),
+					['<CR>'] = cmp.mapping.confirm({select = false}),
 
 					-- scroll up and down the documentation window
 					['<C-u>'] = cmp.mapping.scroll_docs(-4),
